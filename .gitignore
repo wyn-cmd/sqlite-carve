@@ -1,0 +1,22 @@
+# byte code and test caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# virtual environments
+.venv/
+venv/
+
+# build output
+build/
+dist/
+
+# local scratch databases
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+!tests/data/*.db
