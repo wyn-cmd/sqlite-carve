@@ -45,6 +45,8 @@ class PageView:
         if not self.is_btree:
             return
         base = self.header_offset
+        if base + 7 > len(blob):
+            return
         self.ncell = int.from_bytes(blob[base + 3:base + 5], "big")
         self.content_start = int.from_bytes(blob[base + 5:base + 7], "big") or 65536
         self.header_size = 12 if self.type in (INTERIOR_INDEX, INTERIOR_TABLE) else 8
@@ -65,7 +67,10 @@ class PageView:
     def _read_freeblocks(self):
         # freeblocks form a linked list inside the cell content area, each one
         # holding the offset of the next freeblock and its own size
-        offset = int.from_bytes(self.blob[self.header_offset + 1:self.header_offset + 3], "big")
+        header_base = self.header_offset
+        if header_base + 3 > len(self.blob):
+            return
+        offset = int.from_bytes(self.blob[header_base + 1:header_base + 3], "big")
         seen = set()
         while offset and offset not in seen and offset + 4 <= len(self.blob):
             seen.add(offset)
@@ -181,9 +186,11 @@ class Database:
                 for offset in page.cells:
                     if offset + 4 <= len(page.blob):
                         stack.append(int.from_bytes(page.blob[offset:offset + 4], "big"))
-                rightmost = int.from_bytes(page.blob[page.header_offset + 8:page.header_offset + 12], "big")
-                if rightmost:
-                    stack.append(rightmost)
+                rightmost_offset = page.header_offset + 12
+                if rightmost_offset <= len(page.blob):
+                    rightmost = int.from_bytes(page.blob[page.header_offset + 8:rightmost_offset], "big")
+                    if rightmost:
+                        stack.append(rightmost)
             elif page.type == LEAF_TABLE:
                 for offset in page.cells:
                     leaf_cells.append((page_no, offset))
