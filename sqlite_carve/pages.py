@@ -81,7 +81,7 @@ class PageView:
             offset = int.from_bytes(self.blob[offset:offset + 2], "big")
 
     def local_payload_size(self, payload_size):
-        # SQLite spills part of a large record onto overflow pages, this is how
+        # sqlite spills part of a large record onto overflow pages, this is how
         # many payload bytes stay in the cell on this page
         usable = self.usable
         if self.type == LEAF_TABLE:
@@ -106,7 +106,7 @@ class PageView:
                 used_rowid = 0
             local, spilled = self.local_payload_size(payload_size)
             return used_payload + used_rowid + local + (4 if spilled else 0)
-        except (SqliteFormatError, IndexError):
+        except (SqliteFormatError, IndexError, TypeError):
             return None
 
     def live_cell_ranges(self):
@@ -207,7 +207,7 @@ class Database:
             if len(payload) != local:
                 return None
             values, _consumed = decode_record(payload, self.encoding)
-        except (SqliteFormatError, IndexError):
+        except (SqliteFormatError, IndexError, TypeError):
             return None
         return {
             "page": page_no,
