@@ -11,6 +11,8 @@ class SqliteFormatError(Exception):
 def read_varint(buf, offset):
     # a SQLite varint is one to nine bytes, big endian, seven bits per byte
     # the ninth byte contributes all eight of its bits
+    if offset < 0:
+        raise SqliteFormatError("negative offset")
     value = 0
     for i in range(9):
         if offset + i >= len(buf):
